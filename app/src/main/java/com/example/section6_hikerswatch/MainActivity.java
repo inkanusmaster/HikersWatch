@@ -28,9 +28,9 @@ public class MainActivity extends AppCompatActivity {
     @Override //Za pierwszym uruchomieniem sprawdza czy user dał permission w oncreate i updatuje.
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,locationListener); //przesyła do location listenera na bieżąco info
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener); //przesyła do location listenera na bieżąco info
             }
         }
     }
@@ -44,15 +44,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onLocationChanged(Location location) {  //wiadomo, co ma zrobić jak się lokacja zmieni
 
-//                Log.i("Location",location.toString());
+//                Log.i("Location",location.toString()); //latitude (szerokość), longitude (wysokość) , altitude (wysokość),
 
                 Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
                 try {
+                    String strLongitude = Location.convert(location.getLongitude(), Location.FORMAT_DEGREES);
+                    String strLatitude = Location.convert(location.getLatitude(), Location.FORMAT_DEGREES);
+
                     List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                     if (listAddresses != null && listAddresses.size() > 0) {
                         String address = "";
+//                        Log.i("FULL DATA:",listAddresses.toString());
                         if (listAddresses.get(0).getThoroughfare() != null) {
                             address += listAddresses.get(0).getThoroughfare() + " ";
+                        }
+                        if (listAddresses.get(0).getFeatureName() != null) {
+                            address += listAddresses.get(0).getFeatureName() + " ";
                         }
                         if (listAddresses.get(0).getLocality() != null) {
                             address += listAddresses.get(0).getLocality() + " ";
@@ -61,9 +68,20 @@ public class MainActivity extends AppCompatActivity {
                             address += listAddresses.get(0).getPostalCode() + " ";
                         }
                         if (listAddresses.get(0).getAdminArea() != null) {
-                            address += listAddresses.get(0).getAdminArea();
+                            address += listAddresses.get(0).getAdminArea() + " ";
                         }
-                        Log.i("ADDRESS",address);
+                        if (listAddresses.get(0).getCountryName() != null) {
+                            address += listAddresses.get(0).getCountryName() + " ";
+                        }
+                        if (listAddresses.get(0).getCountryCode() != null) {
+                            address += "(" + listAddresses.get(0).getCountryCode() + ")" + " ";
+                        }
+                        address += strLongitude + " ";
+                        address += strLatitude + " ";
+                        address += location.getAltitude() + " ";
+                        address += location.getAccuracy() + " ";
+
+                        Log.i("ADDRESS", address);
 
                     }
                 } catch (Exception e) {
@@ -73,23 +91,23 @@ public class MainActivity extends AppCompatActivity {
             }
 
 
-
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
             }
+
             @Override
             public void onProviderEnabled(String s) { //gdy provider jest enabled przez usera
             }
+
             @Override
             public void onProviderDisabled(String s) { //gdy provider jest disabled przez usera
             }
         };
         //jeśli user NIE DAŁ permission do lokalizacji...
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1); //... zapytaj go o nie
-        }
-        else { //Jeśli już dał permissions (na przykład uruchamiasz program po raz kolejny) to updatuj lokalizację (przesyła do locationListenera dane)
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,locationListener);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1); //... zapytaj go o nie
+        } else { //Jeśli już dał permissions (na przykład uruchamiasz program po raz kolejny) to updatuj lokalizację (przesyła do locationListenera dane)
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
         }
     }
 }
