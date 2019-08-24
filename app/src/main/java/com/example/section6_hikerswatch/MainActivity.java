@@ -14,8 +14,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +23,47 @@ public class MainActivity extends AppCompatActivity {
 
     LocationManager locationManager;
     LocationListener locationListener;
+    TextView dataTextView;
+    String latitude, longitude;
+
+    private void convert(double lat, double lon) {
+        StringBuilder builder = new StringBuilder();
+
+        String latitudeDegrees = Location.convert(Math.abs(lat), Location.FORMAT_SECONDS);
+        String[] latitudeSplit = latitudeDegrees.split(":");
+        builder.append(latitudeSplit[0]);
+        builder.append("°");
+        builder.append(latitudeSplit[1]);
+        builder.append("'");
+        builder.append(latitudeSplit[2]);
+        builder.append("\"");
+
+        if (lat < 0) {
+            builder.append(" S");
+        } else {
+            builder.append(" N");
+        }
+
+        latitude = String.valueOf(builder);
+        builder.setLength(0);
+
+        String longitudeDegrees = Location.convert(Math.abs(lon), Location.FORMAT_SECONDS);
+        String[] longitudeSplit = longitudeDegrees.split(":");
+        builder.append(longitudeSplit[0]);
+        builder.append("°");
+        builder.append(longitudeSplit[1]);
+        builder.append("'");
+        builder.append(longitudeSplit[2]);
+        builder.append("\"");
+
+        if (lon < 0) {
+            builder.append(" W");
+        } else {
+            builder.append(" E");
+        }
+
+        longitude = String.valueOf(builder);
+    }
 
     @Override //Za pierwszym uruchomieniem sprawdza czy user dał permission w oncreate i updatuje.
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -39,49 +79,47 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        dataTextView = findViewById(R.id.dataTextView);
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         locationListener = new LocationListener() {
             @Override
-            public void onLocationChanged(Location location) {  //wiadomo, co ma zrobić jak się lokacja zmieni
-
-//                Log.i("Location",location.toString()); //latitude (szerokość), longitude (wysokość) , altitude (wysokość),
+            public void onLocationChanged(Location location) {
 
                 Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
                 try {
-                    String strLongitude = Location.convert(location.getLongitude(), Location.FORMAT_DEGREES);
-                    String strLatitude = Location.convert(location.getLatitude(), Location.FORMAT_DEGREES);
+//                    String latitude = Location.convert(location.getLatitude(), Location.FORMAT_DEGREES);
+//                    String longitude = Location.convert(location.getLongitude(), Location.FORMAT_DEGREES);
 
                     List<Address> listAddresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                     if (listAddresses != null && listAddresses.size() > 0) {
-                        String address = "";
-//                        Log.i("FULL DATA:",listAddresses.toString());
+                        convert(location.getLatitude(),location.getLongitude());
+                        dataTextView.setText("Address:\n");
                         if (listAddresses.get(0).getThoroughfare() != null) {
-                            address += listAddresses.get(0).getThoroughfare() + " ";
+                            dataTextView.append(listAddresses.get(0).getThoroughfare() + " ");
                         }
                         if (listAddresses.get(0).getFeatureName() != null) {
-                            address += listAddresses.get(0).getFeatureName() + " ";
-                        }
-                        if (listAddresses.get(0).getLocality() != null) {
-                            address += listAddresses.get(0).getLocality() + " ";
+                            dataTextView.append(listAddresses.get(0).getFeatureName() + "\n");
                         }
                         if (listAddresses.get(0).getPostalCode() != null) {
-                            address += listAddresses.get(0).getPostalCode() + " ";
+                            dataTextView.append(listAddresses.get(0).getPostalCode() + " ");
+                        }
+                        if (listAddresses.get(0).getLocality() != null) {
+                            dataTextView.append(listAddresses.get(0).getLocality() + "\n");
                         }
                         if (listAddresses.get(0).getAdminArea() != null) {
-                            address += listAddresses.get(0).getAdminArea() + " ";
+                            dataTextView.append(listAddresses.get(0).getAdminArea() + "\n");
                         }
                         if (listAddresses.get(0).getCountryName() != null) {
-                            address += listAddresses.get(0).getCountryName() + " ";
+                            dataTextView.append(listAddresses.get(0).getCountryName() + " ");
                         }
                         if (listAddresses.get(0).getCountryCode() != null) {
-                            address += "(" + listAddresses.get(0).getCountryCode() + ")" + " ";
+                            dataTextView.append("(" + listAddresses.get(0).getCountryCode() + ")\n\n");
                         }
-                        address += strLongitude + " ";
-                        address += strLatitude + " ";
-                        address += location.getAltitude() + " ";
-                        address += location.getAccuracy() + " ";
-
-                        Log.i("ADDRESS", address);
+                        dataTextView.append("Geo data:\n");
+                        dataTextView.append("Latitude: "+latitude+"\n");
+                        dataTextView.append("Longitude: "+longitude+"\n");
+                        dataTextView.append("Altitude: "+location.getAltitude()+ " m.a.s.l.\n");
+                        dataTextView.append("Accuracy: "+location.getAccuracy()+" m.");
 
                     }
                 } catch (Exception e) {
